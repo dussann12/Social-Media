@@ -30,6 +30,11 @@ export class UserController {
         return this.userService.getUser();
     }
 
+    @Get(':id')
+    getUserById(@Param('id') id: string) {
+        return this.userService.getUserById(+id);
+    }
+
     @Put(':id')
     updateUser(
         @Param('id', ParseIntPipe) id: number,

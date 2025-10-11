@@ -6,7 +6,14 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
+    findUnique(email: string) {
+        throw new Error('Method not implemented.');
+    }
+    
     constructor(private prisma: PrismaService) {}
+
+    getUserByEmail(email: string) { 
+        return this.prisma.user.findUnique({ where: { email } }) }
 
     async createUser(data: { email: string; name?: string; password: string }) {
         if(data.password) {
@@ -18,7 +25,15 @@ export class UserService {
     }
 
     getUser() {
-        return this.prisma.user.findMany();
+        return this.prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                createdAt: true,
+                updatedAt: true,  
+            }
+        });
     }
 
     getUserById(id: number) {
@@ -32,14 +47,14 @@ export class UserService {
     }
 
     async updateUserById(id: number, data: { email?: string; name?: string; password?: string }) {
-        const findUser = await this.getUserById(id);
-        if (!findUser) throw new HttpException('User Not Found', 404);
+        const existingUser  = await this.getUserById(id);
+        if (!existingUser ) throw new HttpException('User Not Found', 404);
 
-        if(data.name) {
-            const findUser = await this.prisma.user.findUnique({ 
-                where: { username: data.name as string },
+        if(data.email) {
+            const emailTaken  = await this.prisma.user.findUnique({ 
+                where: { email: data.email as string },
             });
-            if (findUser) throw new HttpException('Username already taken', 404);
+            if (emailTaken  && emailTaken.id !== id) throw new HttpException('email already taken', 409);
         }
 return this.prisma.user.update({ where: { id }, data });
 
