@@ -6,9 +6,6 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-    findUnique(email: string) {
-        throw new Error('Method not implemented.');
-    }
     
     constructor(private prisma: PrismaService) {}
 
@@ -16,11 +13,7 @@ export class UserService {
         return this.prisma.user.findUnique({ where: { email } }) }
 
     async createUser(data: { email: string; name?: string; password: string }) {
-        if(data.password) {
-            const hashedPassword = await bcrypt.hash(data.password, 10);
-
-            data.password = hashedPassword;
-        }
+        
         return this.prisma.user.create({ data });
     }
 

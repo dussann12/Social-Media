@@ -1,8 +1,10 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Post, HttpCode, HttpStatus, BadRequestException, UseGuards, Res, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/register.dto';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -22,4 +24,13 @@ export class AuthController {
         ) {
         return this.authService.signIn(loginDto);
     }
+
+    @Post('refresh')
+    @UseGuards(RefreshTokenGuard)
+    async refresh(@Req() req) {
+        const user = req.user;
+        return this.authService.refreshTokens(user);
+    }       
+        
+    
 }

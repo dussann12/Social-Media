@@ -47,4 +47,12 @@ export class AuthService {
 
         };
     }
+
+    async refreshTokens(user: any): Promise<{ accessToken: string }> {
+        const payload = { id: user.id, email: user.email, name: user.name };
+        return {
+            accessToken: this.jwtService.sign(payload),
+        };
+    }
+
 }
