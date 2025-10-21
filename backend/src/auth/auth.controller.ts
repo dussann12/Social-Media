@@ -5,6 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/register.dto';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { response } from 'express';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -23,6 +24,11 @@ export class AuthController {
     signIn(@Body() loginDto: LoginDto 
         ) {
         return this.authService.signIn(loginDto);
+    }
+
+    @Post('verify')
+    async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+        return this.authService.verifyEmail(verifyEmailDto);
     }
 
     @Post('refresh')

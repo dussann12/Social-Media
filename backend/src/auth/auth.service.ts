@@ -4,6 +4,9 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { MailService } from 'src/mail/mail.service';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 
 
@@ -12,6 +15,8 @@ import { LoginDto } from './dto/login.dto';
 export class AuthService {
     constructor(private userService: UserService,
                 private jwtService: JwtService,
+                private mailService: MailService,
+                private prisma: PrismaService,
     ) {}
 
     async signIn(loginDto: LoginDto): Promise<any> {
@@ -42,6 +47,19 @@ export class AuthService {
             password: hashedPassword,
         });
 
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
+
+        await this.userService['prisma'].verificationCode.create({
+            data: {
+                userId: user.id,
+                code,
+                expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+               
+            },
+        });
+
+        await this.mailService.sendVerificationEmail(user.email, code);
+
         const payload = { id: user.id, email: user.email, name: user.name };
         return { accessToken: this.jwtService.sign(payload)
 
@@ -53,6 +71,41 @@ export class AuthService {
         return {
             accessToken: this.jwtService.sign(payload),
         };
+    }
+
+    async verifyEmail(verifyEmailDto: VerifyEmailDto) {
+        const { email, code } = verifyEmailDto;
+
+        const user = await this.userService.getUserByEmail(email);
+
+        if(!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        const verificationCode = await this.prisma.verificationCode.findFirst({
+            where: {
+                userId: user.id,
+                code,
+                used: false,
+            },
+        });
+
+        if(!verificationCode) {
+            throw new UnauthorizedException('Invalid or already used code');
+        }
+
+        if(verificationCode.expiresAt < new Date()) {
+            throw new UnauthorizedException('Verification code has expired');
+        }
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { isVerified: true },
+        });
+        await this.prisma.verificationCode.update({
+            where: { id: verificationCode.id },
+            data: { used: true },
+        });
+
+        return { message: 'Email verified successfully' };
     }
 
 }
