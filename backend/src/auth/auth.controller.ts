@@ -1,4 +1,4 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, BadRequestException, UseGuards, Res, Req } from '@nestjs/common';
+import { Body, Controller, Post, HttpCode, HttpStatus, BadRequestException, UseGuards, Res, Req, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { LoginDto } from './dto/login.dto';
@@ -6,6 +6,9 @@ import { CreateUserDto } from './dto/register.dto';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { response } from 'express';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { currentUser } from './decorators/current-user.decorator';
+import { JwtAuthGuard } from './guards/jwt.guard';
+
 
 @Controller('auth')
 export class AuthController {
@@ -37,6 +40,13 @@ export class AuthController {
         const user = req.user;
         return this.authService.refreshTokens(user);
     }       
+
+    @UseGuards(JwtAuthGuard)
+    @Get('profile')
+    getProfile(@currentUser() user: any) {
+        return user;
+    }
+
         
     
 }
