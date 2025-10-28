@@ -6,7 +6,7 @@ import { CreateUserDto } from './dto/register.dto';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { response } from 'express';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import { currentUser } from './decorators/current-user.decorator';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt.guard';
 
 
@@ -43,7 +43,7 @@ export class AuthController {
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
-    getProfile(@currentUser() user: any) {
+    getProfile(@CurrentUser() user: any) {
         return user;
     }
 
