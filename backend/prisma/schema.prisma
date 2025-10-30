@@ -19,6 +19,8 @@ model User {
   posts             Post[]
   likes             Like[]
   comments          Comment[]
+  requestedFriends  Friendship[]       @relation("requestedFriends")
+  receivedFriends   Friendship[]       @relation("receivedFriends")
 }
 
 model VerificationCode {
@@ -32,15 +34,15 @@ model VerificationCode {
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   title     String
   content   String?
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User      @relation(fields: [authorId], references: [id])
   authorId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  likes             Like[]
-  comments          Comment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  likes     Like[]
+  comments  Comment[]
 }
 
 model Like {
@@ -50,6 +52,7 @@ model Like {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    Int
   createdAt DateTime @default(now())
+
   @@unique([userId, postId])
 }
 
@@ -61,4 +64,14 @@ model Comment {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    Int
   createdAt DateTime @default(now())
+}
+
+model Friendship {
+  id          Int      @id @default(autoincrement())
+  requester   User     @relation("requestedFriends", fields: [requesterId], references: [id])
+  requesterId Int
+  receiver    User     @relation("receivedFriends", fields: [receiverId], references: [id])
+  receiverId  Int
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
 }

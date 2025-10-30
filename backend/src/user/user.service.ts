@@ -9,6 +9,45 @@ export class UserService {
     
     constructor(private prisma: PrismaService) {}
 
+    async getUserProfile(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    return user;
+  }
+
+  async updateUserProfile(
+    userId: number,
+    data: { name?: string; email?: string; password?: string },
+  ) {
+    const updatedData: any = { ...data };
+
+
+    if (data.password) {
+      updatedData.password = await bcrypt.hash(data.password, 10);
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: updatedData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+
     getUserByEmail(email: string) { 
         return this.prisma.user.findUnique({ where: { email } }) }
 

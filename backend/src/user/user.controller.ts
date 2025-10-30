@@ -1,4 +1,4 @@
-import { ParseIntPipe } from "@nestjs/common";
+import { ParseIntPipe, Patch, UseGuards } from "@nestjs/common";
 
 
 import {
@@ -12,10 +12,27 @@ import {
 } from '@nestjs/common';
 
 import { UserService } from "./user.service";
+import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
+import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 
 @Controller('users')
 export class UserController {
     constructor(private userService: UserService) {}
+
+    @UseGuards(JwtAuthGuard)
+    @Get('me')
+    async getMe(@CurrentUser() user: any) {
+        return this.userService.getUserProfile(user.id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch('update')
+    async updateProfile(
+        @CurrentUser() user: any,
+        @Body() updateData: { name?: string; email?: string; password?; string },
+    ) {
+        return this.userService.updateUserProfile(user.id, updateData);
+    }
 
     @Post()
     createUser (
