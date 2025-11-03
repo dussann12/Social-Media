@@ -9,9 +9,18 @@ import { PostModule } from './post/post.module';
 import { LikeModule } from './like/like.module';
 import { CommentModule } from './comment/comment.module';
 import { FriendshipModule } from './friendship/friendship.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
-  imports: [PrismaModule, UserModule, AuthModule, PostModule, LikeModule, CommentModule, FriendshipModule],
+  imports: [PrismaModule, UserModule, AuthModule, PostModule, LikeModule, CommentModule, FriendshipModule, UploadModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      }
+  ]),
+],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, UseGuards } from "@nestjs/common";
+import { Controller, Post, Get, Param, UseGuards, HttpCode, HttpStatus, ParseIntPipe } from "@nestjs/common";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import { FriendshipService } from "./friendship.service";
@@ -9,7 +9,7 @@ import { FriendshipService } from "./friendship.service";
 export class FriendshipController {
     constructor(private readonly friendshipService: FriendshipService) {}
 
-    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.CREATED)
     @Post('request/:receiverId')
     async sendRequest(
         @CurrentUser() user: any,
@@ -18,23 +18,23 @@ export class FriendshipController {
         return this.friendshipService.sendRequest(user.id, Number(receiverId));
     }
 
-    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     @Post('accept/:requestId')
     async acceptRequest(
         @CurrentUser() user: any,
-        @Param('requestId') requestId: string,
+        @Param('requestId', ParseIntPipe) requestId: string,
     ) {
         return this.friendshipService.acceptRequest(Number(requestId), user.id);
     }
-    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     @Post('decline/:requestId')
     async declineRequest(
         @CurrentUser() user: any,
-        @Param('requestId') requestId: string,
+        @Param('requestId', ParseIntPipe) requestId: string,
     ) {
         return this.friendshipService.declineRequest(Number(requestId), user.id);
     }
-    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     @Get('list')
     async getFriends(@CurrentUser() user: any)
     {

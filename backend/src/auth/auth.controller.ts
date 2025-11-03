@@ -4,7 +4,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/register.dto';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
-import { response } from 'express';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -14,6 +13,8 @@ import { JwtAuthGuard } from './guards/jwt.guard';
 export class AuthController {
     constructor(private authService: AuthService) {}
 
+
+    @HttpCode(HttpStatus.CREATED)
     @Post('register')
     async register(
         
@@ -36,8 +37,8 @@ export class AuthController {
 
     @Post('refresh')
     @UseGuards(RefreshTokenGuard)
-    async refresh(@Req() req) {
-        const user = req.user;
+    async refresh(@CurrentUser() user: any) {
+        
         return this.authService.refreshTokens(user);
     }       
 

@@ -8,6 +8,7 @@ import { MailModule } from 'src/mail/mail.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt.guard';
+import { RefreshTokenStrategy } from './refresh-token.strategy';
 
 
 @Module({
@@ -34,7 +35,7 @@ import { JwtAuthGuard } from './guards/jwt.guard';
       
     }),
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard,RefreshTokenStrategy],
   controllers: [AuthController],
   exports: [AuthService, JwtModule],
 })

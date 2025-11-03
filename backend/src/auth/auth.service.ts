@@ -29,7 +29,11 @@ export class AuthService {
             throw new UnauthorizedException('Invalid password');
         }
         const payload = { email: user.email , id: user.id };
-        return { accessToken: this.jwtService.sign(payload), user };
+
+        const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+
+        const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+        return { accessToken, refreshToken, user };
 
     }
     
@@ -66,12 +70,24 @@ export class AuthService {
         };
     }
 
-    async refreshTokens(user: any): Promise<{ accessToken: string }> {
-        const payload = { id: user.id, email: user.email, name: user.name };
-        return {
-            accessToken: this.jwtService.sign(payload),
-        };
-    }
+    async refreshTokens(user: any): Promise<{ accessToken: string; refreshToken: string }> {
+  
+  const existingUser = await this.prisma.user.findUnique({
+    where: { id: user.id },
+  });
+
+  if (!existingUser) {
+    throw new UnauthorizedException('User not found');
+  }
+
+  
+  const payload = { id: existingUser.id, email: existingUser.email };
+  const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+  const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+  
+  return { accessToken, refreshToken };
+}
 
     async verifyEmail(verifyEmailDto: VerifyEmailDto) {
         const { email, code } = verifyEmailDto;

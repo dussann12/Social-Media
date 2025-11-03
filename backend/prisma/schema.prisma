@@ -21,6 +21,7 @@ model User {
   comments          Comment[]
   requestedFriends  Friendship[]       @relation("requestedFriends")
   receivedFriends   Friendship[]       @relation("receivedFriends")
+  profileImage      String?
 }
 
 model VerificationCode {
@@ -43,6 +44,7 @@ model Post {
   updatedAt DateTime  @updatedAt
   likes     Like[]
   comments  Comment[]
+  imageUrl          String?
 }
 
 model Like {
