@@ -1,10 +1,12 @@
 import { useState } from "react";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -22,7 +24,7 @@ export default function Login() {
             console.log("Login uspesan", res.data);
             alert("Uspesan login");
 
-            window.location.href = "/feed";
+            navigate("/feed");
         } catch (err: any) {
             console.error("Greska pri loginu", err.response?.data || err.message);
             alert("Neuspesan login");
