@@ -1,14 +1,15 @@
-import { useEffect } from "react";
-import { testApi } from "./api/test";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 export default function App() {
-  useEffect(() => {
-    testApi();
-  }, []);
-
   return (
-    <h1 className="text-3xl font-bold text-center text-green-500 mt-10">
-      Frontend povezan sa backendom
-    </h1>
-  );
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/feed" element={<h1 className="text-center text-2xl text-black mt-10">Feed strana uskoro</h1>} />
+      </Routes>
+    </Router>  );
 }
