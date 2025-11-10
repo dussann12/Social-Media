@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import CommentsSection from "../components/CommentsSection";
 
 interface Post {
   id: number;
@@ -11,27 +12,37 @@ interface Post {
     email: string;
   };
   createdAt: string;
+  likes?: any[];
+  comments?: any[];
 }
 
 export default function Feed() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [likedPosts, setLikedPosts] = useState<number[]>([]);
+  const [likedPosts, setLikedPosts] = useState<number[]>([]); 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
- 
-  const fetchPosts = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/posts"); 
-      setPosts(res.data);
-    } catch (err) {
-      console.error("Greška pri učitavanju postova", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await api.get("/posts", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setPosts(res.data);
+      } catch (err) {
+        console.error("Greška pri dohvatanju postova", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [user.id]);
 
 
   const handleCreatePost = async (e: React.FormEvent) => {
@@ -39,8 +50,8 @@ export default function Feed() {
     if (!title.trim()) return;
 
     try {
-      const res = await api.post("/post/create", { title, content });
-      setPosts([res.data, ...posts]);
+      const res = await api.post("/posts/create", { title, content });
+      setPosts((prev) => [res.data, ...prev]);
       setTitle("");
       setContent("");
     } catch (err) {
@@ -48,24 +59,37 @@ export default function Feed() {
     }
   };
 
- 
   const handleLike = async (postId: number) => {
-    try {
-      await api.post(`/likes/${postId}`);
-      setLikedPosts((prev) =>
-        prev.includes(postId)
-          ? prev.filter((id) => id !== postId)
-          : [...prev, postId]
-      );
-    } catch (err) {
-      console.error("Greška pri lajkovanju", err);
-    }
-  };
+  try {
+    const token = localStorage.getItem("accessToken");
+    await api.post(`/likes/${postId}`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
- 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+    
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              likes: likedPosts.includes(postId)
+                ? post.likes?.slice(0, -1)
+                : [...(post.likes || []), { userId: 1 }], 
+            }
+          : post
+      )
+    );
+
+    
+    setLikedPosts((prev) =>
+      prev.includes(postId)
+        ? prev.filter((id) => id !== postId)
+        : [...prev, postId]
+    );
+  } catch (err) {
+    console.error("Greška pri lajkovanju", err);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -114,7 +138,6 @@ export default function Feed() {
               </h2>
               <p className="text-gray-300 mt-2">{post.content}</p>
 
-              {}
               <div className="mt-3 flex items-center justify-between">
                 <p className="text-sm text-gray-500">
                   Autor:{" "}
@@ -131,13 +154,20 @@ export default function Feed() {
                       : "text-gray-400 hover:text-red-400"
                   } transition text-xl`}
                 >
-                  ❤️
+                  {likedPosts.includes(post.id) ? "❤️" : "🤍"}
                 </button>
+              </div>
+
+              <div className="flex items-center space-x-4 text-gray-400 text-sm mt-2">
+                <p>❤️ {post.likes?.length || 0}</p>
+                <p>💬 {post.comments?.length || 0}</p>
               </div>
 
               <p className="text-xs text-gray-600 mt-1">
                 Objavljeno: {new Date(post.createdAt).toLocaleString()}
               </p>
+
+              <CommentsSection postId={post.id} />
             </div>
           ))}
         </div>
