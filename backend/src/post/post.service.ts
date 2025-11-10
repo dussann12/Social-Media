@@ -7,12 +7,39 @@ import { Prisma, Post } from "@prisma/client";
 export class PostService {
     constructor (private prisma: PrismaService) {}
 
-    async createPost(data: Prisma.PostCreateInput): Promise<Post> {
-        return this.prisma.post.create({ data });
+    async createPost(data: any) {
+        return this.prisma.post.create({ 
+      data,
+          include: {
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                },
+            },
+            likes: true,
+            comments: true,
+          },
+        });
     }
 
     async findAllPosts(): Promise<Post[]> {
-        return this.prisma.post.findMany();
+        return this.prisma.post.findMany({
+            include: {
+                author: {
+                    select: {
+                      id: true,
+                      name: true,
+                },
+              },
+              likes: true,
+              comments: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
     }
 
     async findPostById(id: number): Promise<Post | null> {

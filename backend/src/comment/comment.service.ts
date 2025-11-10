@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Prisma } from "@prisma/client";
+import { connect } from "http2";
 
 
 
@@ -19,12 +20,25 @@ export class CommentService {
             throw new NotFoundException('Post not found');
        
         }
-        else {
-            const comment = await this.prisma.comment.create ({
-                data: { content , user: { connect: { id: userId } }, post: { connect: { id: postId } } }
-            })
-            return comment
-        };
+        const comment = await this.prisma.comment.create({
+            data: {
+                content,
+                user: {
+                    connect: { id: userId } },
+                    post: { connect: { id: postId } },
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+        });
+
+        return comment;
     }
 
     async getCommentsByPost(postId: number) {
@@ -36,17 +50,26 @@ export class CommentService {
         if(!existingPost) { 
             throw new NotFoundException('Post not found');
        
-        } else {
+        } 
             return this.prisma.comment.findMany({
 
                 where: {
                     postId,
                 },
                 include: {
-                    user: true,
-                }
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
             });
-        }
+        
 
     }
     async deleteComment(commentId: number, userId: number) {

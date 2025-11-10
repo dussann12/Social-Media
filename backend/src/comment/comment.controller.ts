@@ -17,7 +17,7 @@ export class CommentController {
     }
     @HttpCode(HttpStatus.OK)
     @Get(':postId')
-    async getCommentsByPost(@Param('postId') postId: number) {
+    async getCommentsByPost(@Param('postId') postId: string) {
         return this.commentService.getCommentsByPost(Number(postId));
     }
     @HttpCode(HttpStatus.NO_CONTENT)
