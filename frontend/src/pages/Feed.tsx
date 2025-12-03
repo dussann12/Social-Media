@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import CommentsSection from "../components/CommentsSection";
+import Navbar from "../components/Navbar";
 
 interface Post {
   id: number;
@@ -14,26 +15,45 @@ interface Post {
   createdAt: string;
   likes?: any[];
   comments?: any[];
+  commentsCount?: number; 
 }
 
 export default function Feed() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [likedPosts, setLikedPosts] = useState<number[]>([]); 
+  const [likedPosts, setLikedPosts] = useState<number[]>([]);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem("accessToken");
+
         const res = await api.get("/posts", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setPosts(res.data);
+        const data = res.data as Post[];
+
+        
+        const withCounts = data.map((post) => ({
+          ...post,
+          commentsCount: post.comments ? post.comments.length : 0,
+        }));
+
+        setPosts(withCounts);
+
+       
+        const likedByUser = withCounts
+          .filter((post: any) =>
+            post.likes?.some((like: any) => like.userId === user.id)
+          )
+          .map((post) => post.id);
+
+        setLikedPosts(likedByUser);
       } catch (err) {
         console.error("Greška pri dohvatanju postova", err);
       } finally {
@@ -44,14 +64,20 @@ export default function Feed() {
     fetchPosts();
   }, [user.id]);
 
-
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
     try {
       const res = await api.post("/posts/create", { title, content });
-      setPosts((prev) => [res.data, ...prev]);
+      const newPost: Post = {
+        ...res.data,
+        commentsCount: 0,
+        likes: [],
+        comments: [],
+      };
+
+      setPosts((prev) => [newPost, ...prev]);
       setTitle("");
       setContent("");
     } catch (err) {
@@ -60,42 +86,48 @@ export default function Feed() {
   };
 
   const handleLike = async (postId: number) => {
-  try {
-    const token = localStorage.getItem("accessToken");
-    await api.post(`/likes/${postId}`, {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      const token = localStorage.getItem("accessToken");
+      await api.post(
+        `/likes/${postId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
+      setLikedPosts((prev) =>
+        prev.includes(postId)
+          ? prev.filter((id) => id !== postId)
+          : [...prev, postId]
+      );
+    } catch (err) {
+      console.error("Greška pri lajkovanju", err);
+    }
+  };
+
+  
+  const handleCommentsCountChange = (postId: number, delta: number) => {
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === postId
           ? {
               ...post,
-              likes: likedPosts.includes(postId)
-                ? post.likes?.slice(0, -1)
-                : [...(post.likes || []), { userId: 1 }], 
+              commentsCount: (post.commentsCount || 0) + delta,
             }
           : post
       )
     );
-
-    
-    setLikedPosts((prev) =>
-      prev.includes(postId)
-        ? prev.filter((id) => id !== postId)
-        : [...prev, postId]
-    );
-  } catch (err) {
-    console.error("Greška pri lajkovanju", err);
-  }
-};
+  };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gray-900 text-white">
+        <Navbar />
+
+        <div className="p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">📢 Feed</h1>
 
-      {}
+      
       <form
         onSubmit={handleCreatePost}
         className="mb-8 bg-gray-800 p-6 rounded-xl shadow-md max-w-xl mx-auto"
@@ -121,7 +153,6 @@ export default function Feed() {
         </button>
       </form>
 
-      {}
       {loading ? (
         <p className="text-center text-gray-400">Učitavanje postova...</p>
       ) : posts.length === 0 ? (
@@ -146,6 +177,7 @@ export default function Feed() {
                   </span>
                 </p>
 
+                
                 <button
                   onClick={() => handleLike(post.id)}
                   className={`${
@@ -158,20 +190,28 @@ export default function Feed() {
                 </button>
               </div>
 
+              
               <div className="flex items-center space-x-4 text-gray-400 text-sm mt-2">
-                <p>❤️ {post.likes?.length || 0}</p>
-                <p>💬 {post.comments?.length || 0}</p>
+                <p>❤️ {post.likes?.length || likedPosts.includes(post.id) ? 1 : 0}</p>
+                <p>💬 {post.commentsCount || 0}</p>
               </div>
 
               <p className="text-xs text-gray-600 mt-1">
                 Objavljeno: {new Date(post.createdAt).toLocaleString()}
               </p>
 
-              <CommentsSection postId={post.id} />
+              
+              <CommentsSection
+                postId={post.id}
+                onCommentsCountChange={(delta) =>
+                  handleCommentsCountChange(post.id, delta)
+                }
+              />
             </div>
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

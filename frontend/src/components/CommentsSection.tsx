@@ -5,28 +5,34 @@ interface Comment {
   id: number;
   content: string;
   createdAt: string;
-  user?: {
+  user: {
     id: number;
     name: string;
+    email: string;
   };
 }
 
 interface CommentsSectionProps {
   postId: number;
+  onCommentsCountChange?: (delta: number) => void; 
 }
 
-export default function CommentsSection({ postId }: CommentsSectionProps) {
+export default function CommentsSection({
+  postId,
+  onCommentsCountChange,
+}: CommentsSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const token = localStorage.getItem("accessToken");
 
-  // 🔹 Učitavanje komentara za post
   const fetchComments = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/comment/${postId}`);
+      const res = await api.get(`/comment/${postId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setComments(res.data);
     } catch (err) {
       console.error("Greška pri dohvatanju komentara", err);
@@ -37,98 +43,96 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
 
   useEffect(() => {
     fetchComments();
+    
   }, [postId]);
 
-  // 🔹 Dodavanje komentara
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
     try {
-      const token = localStorage.getItem("accessToken");
       const res = await api.post(
         `/comment/${postId}`,
         { content: newComment },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      // ✅ odmah dodaj novi komentar lokalno
       setComments((prev) => [res.data, ...prev]);
       setNewComment("");
+
+      
+      if (onCommentsCountChange) {
+        onCommentsCountChange(1);
+      }
     } catch (err) {
       console.error("Greška pri dodavanju komentara", err);
     }
   };
 
-  // 🔹 Brisanje komentara
   const handleDeleteComment = async (commentId: number) => {
     try {
-      const token = localStorage.getItem("accessToken");
       await api.delete(`/comment/${commentId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // ✅ odmah obriši lokalno
       setComments((prev) => prev.filter((c) => c.id !== commentId));
+
+      
+      if (onCommentsCountChange) {
+        onCommentsCountChange(-1);
+      }
     } catch (err) {
       console.error("Greška pri brisanju komentara", err);
     }
   };
 
   return (
-    <div className="mt-6">
-      <h3 className="text-lg font-semibold mb-3 text-gray-200">
-        💬 Komentari
-      </h3>
-
-      {/* 🟢 Forma za dodavanje komentara */}
-      <form onSubmit={handleAddComment} className="flex mb-4">
+    <div className="mt-4 border-t border-gray-700 pt-3">
+      <form onSubmit={handleAddComment} className="flex space-x-2 mb-3">
         <input
           type="text"
           placeholder="Napiši komentar..."
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          className="flex-grow p-2 rounded-l bg-gray-700 text-white focus:outline-none"
+          className="flex-1 p-2 rounded bg-gray-700 text-white text-sm focus:outline-none"
         />
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-r"
+          className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded"
         >
           Pošalji
         </button>
       </form>
 
-      {/* 🔵 Lista komentara */}
       {loading ? (
-        <p className="text-gray-400">Učitavanje komentara...</p>
+        <p className="text-gray-400 text-sm">Učitavanje komentara...</p>
       ) : comments.length === 0 ? (
-        <p className="text-gray-500">Još uvek nema komentara.</p>
+        <p className="text-gray-500 text-sm">Nema komentara još.</p>
       ) : (
-        comments.map((comment) => (
-          <div
-            key={comment.id}
-            className="bg-gray-800 p-3 rounded-lg mb-3 flex justify-between items-center transition-all duration-200 hover:bg-gray-750"
-          >
-            <div>
-              <p className="text-gray-200">{comment.content}</p>
-              <p className="text-sm text-gray-500">
-                {comment.user?.name || "Nepoznat"} —{" "}
-                {new Date(comment.createdAt).toLocaleString()}
-              </p>
-            </div>
-
-            {/* 🔴 Dugme za brisanje (vidi se samo autoru) */}
-            {comment.user?.id === user.id && (
+        <div className="space-y-2">
+          {comments.map((comment) => (
+            <div
+              key={comment.id}
+              className="flex items-start justify-between bg-gray-800 p-2 rounded"
+            >
+              <div>
+                <p className="text-sm text-gray-200">{comment.content}</p>
+                <p className="text-xs text-gray-500">
+                  {comment.user?.name || "Nepoznat"} •{" "}
+                  {new Date(comment.createdAt).toLocaleString()}
+                </p>
+              </div>
               <button
                 onClick={() => handleDeleteComment(comment.id)}
-                className="text-red-500 hover:text-red-400 text-lg ml-2"
-                title="Obriši komentar"
+                className="text-xs text-red-400 hover:text-red-300"
               >
-                🗑
+                Obriši
               </button>
-            )}
-          </div>
-        ))
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

@@ -3,15 +3,27 @@ import { useAuth } from "../context/AuthContext";
 import React, { JSX } from "react";
 
 interface ProtectedRouteProps {
-    children: JSX.Element;
+  children: JSX.Element;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-    const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
-    if(!isAuthenticated) {
-        return <Navigate to="/login" replace />;
-    }
+  
+  if (isAuthenticated === false && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-gray-900">
+        Učitavanje...
+      </div>
+    );
+  }
 
-    return children;
+  
+  const token = localStorage.getItem("accessToken");
+  if (!token || !isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+ 
+  return children;
 }

@@ -49,7 +49,7 @@ export class UploadController {
     }
 
     @HttpCode(HttpStatus.CREATED)
-    @Post('post/:postId')
+    @Post('posts/:postId')
     @UseInterceptors(
         FileInterceptor('file', {
             storage: diskStorage({
@@ -70,7 +70,7 @@ export class UploadController {
         }),
     )
     async uploadPostImage(
-        @Param('postId', ParseIntPipe) postId: string,
+        @Param('postId', ParseIntPipe) postId: number,
         @UploadedFile() file: Express.Multer.File,
     ) {
         const updated = await this.uploadService.uploadPostImage(
