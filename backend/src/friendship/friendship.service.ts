@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
+import { FriendshipStatus } from "@prisma/client";
 
 @Injectable()
 export class FriendshipService {
@@ -27,7 +28,7 @@ export class FriendshipService {
             data: {
                 requester: { connect: { id: senderId } },
                 receiver: { connect: { id: receiverId } },
-                status: 'PENDING',
+                status: FriendshipStatus.PENDING,
             },
         });
 
@@ -50,7 +51,7 @@ export class FriendshipService {
             where: {
                 id: requestId
             },
-            data: { status: 'ACCEPTED' },
+            data: { status: FriendshipStatus.ACCEPTED },
         });
 
         return { message: 'Friend request accepted', updated };
@@ -74,16 +75,37 @@ export class FriendshipService {
             where: {
                 id: requestId
             },
-            data: { status: 'DECLINED' },
+            data: { status: FriendshipStatus.REJECTED },
         });
 
         return { message: 'Friend request declined', updated };
     }
 
+    async getPendingRequests(userId: number) {
+        return this.prisma.friendship.findMany({
+            where: {
+                receiverId: userId,
+                status: FriendshipStatus.PENDING,
+            },
+            include: {
+                requester: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+    }
+
     async getFriends(userId: number) {
         const friendships = await this.prisma.friendship.findMany({
             where: {
-                status: 'ACCEPTED',
+                status: FriendshipStatus.ACCEPTED,
                 OR: [{ requesterId: userId }, { receiverId: userId }],
             },
             include: {

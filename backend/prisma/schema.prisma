@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
   id                Int                @id @default(autoincrement())
   email             String             @unique
@@ -74,6 +80,6 @@ model Friendship {
   requesterId Int
   receiver    User     @relation("receivedFriends", fields: [receiverId], references: [id])
   receiverId  Int
-  status      String   @default("PENDING")
+  status      FriendshipStatus   @default(PENDING)
   createdAt   DateTime @default(now())
 }

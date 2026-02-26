@@ -3,6 +3,7 @@ import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { toast } from "react-toastify";
 
 interface ProfileData {
   id: number;
@@ -68,10 +69,10 @@ export default function Profile() {
         },
           token
       );
-      alert("Profil uspešno ažuriran ✅");
+      toast.success("Profil uspešno ažuriran.");
     } catch (err) {
       console.error("Greška pri ažuriranju profila", err);
-      alert("Greška pri ažuriranju profila");
+      toast.error("Greška pri ažuriranju profila.");
     } finally {
       setUpdatingProfile(false);
     }
@@ -91,7 +92,7 @@ export default function Profile() {
   
   const handleUploadProfileImage = async () => {
     if (!selectedFile) {
-      alert("Prvo izaberi sliku.");
+      toast.error("Prvo izaberi sliku.");
       return;
     }
 
@@ -126,11 +127,11 @@ export default function Profile() {
         token
       );
 
-      alert("Profilna slika uspešno uploadovana ✅");
+      toast.success("Profilna slika uspešno uploadovana.");
       setSelectedFile(null);
     } catch (err) {
       console.error("Greška pri uploadu slike", err);
-      alert("Greška pri uploadu slike");
+      toast.error("Greška pri uploadu slike.");
     } finally {
       setUploading(false);
     }
@@ -237,7 +238,7 @@ export default function Profile() {
           onClick={handleLogout}
           className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded"
         >
-          Logout
+          Odjavi se
         </button>
       </div>
       </div>

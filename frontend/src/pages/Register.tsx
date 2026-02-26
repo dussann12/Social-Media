@@ -1,5 +1,6 @@
 import { useState } from "react";
-import api from "../api/axios"; 
+import api from "../api/axios";
+import { toast } from "react-toastify";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -19,13 +20,13 @@ export default function Register() {
       });
 
       console.log("Registracija uspešna", res.data);
-      alert("Uspešno ste se registrovali!");
+      toast.success("Uspešno ste se registrovali!");
 
      
       window.location.href = "/login";
     } catch (err: any) {
       console.error("Greška pri registraciji", err.response?.data || err.message);
-      alert("Neuspešna registracija!");
+      toast.error("Neuspešna registracija!");
     } finally {
       setLoading(false);
     }

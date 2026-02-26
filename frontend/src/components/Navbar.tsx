@@ -30,15 +30,32 @@ export default function Navbar() {
           <Link to="/profile" className={`${isActive("/profile")} text-sm`}>
             Profil
           </Link>
+          <Link to="/users" className={`${isActive("/users")} text-sm`}>
+            Korisnici
+          </Link>
+          <Link to="/friend-requests" className={`${isActive("/friend-requests")} text-sm`}>
+            Zahtevi
+          </Link>
+          <Link to="/friends" className={`${isActive("/friends")} text-sm`}>
+            Prijatelji
+          </Link>
         </div>
       </div>
 
       {user && (
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-              {initial}
-            </div>
+            {user.profileImage ? (
+              <img
+                src={`http://localhost:3000/${user.profileImage.replace(/^\.?\//, "")}`}
+                alt=""
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                {initial}
+              </div>
+            )}
             <span className="text-gray-200 text-sm">{user.name}</span>
           </div>
 
@@ -46,7 +63,7 @@ export default function Navbar() {
             onClick={handleLogout}
             className="ml-2 text-xs sm:text-sm px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white"
           >
-            Logout
+            Odjavi se
           </button>
         </div>
       )}

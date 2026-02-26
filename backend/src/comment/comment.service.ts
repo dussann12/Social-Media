@@ -33,6 +33,7 @@ export class CommentService {
                         id: true,
                         name: true,
                         email: true,
+                        profileImage: true,
                     },
                 },
             },

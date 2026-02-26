@@ -35,9 +35,14 @@ export class FriendshipController {
         return this.friendshipService.declineRequest(Number(requestId), user.id);
     }
     @HttpCode(HttpStatus.OK)
+    @Get('requests')
+    async getPendingRequests(@CurrentUser() user: any) {
+        return this.friendshipService.getPendingRequests(user.id);
+    }
+
+    @HttpCode(HttpStatus.OK)
     @Get('list')
-    async getFriends(@CurrentUser() user: any)
-    {
+    async getFriends(@CurrentUser() user: any) {
         return this.friendshipService.getFriends(user.id);
     }
 }

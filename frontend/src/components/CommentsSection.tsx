@@ -9,6 +9,7 @@ interface Comment {
     id: number;
     name: string;
     email: string;
+    profileImage?: string | null;
   };
 }
 
@@ -25,14 +26,10 @@ export default function CommentsSection({
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("accessToken");
-
   const fetchComments = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/comment/${postId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`/comment/${postId}`);
       setComments(res.data);
     } catch (err) {
       console.error("Greška pri dohvatanju komentara", err);
@@ -51,13 +48,7 @@ export default function CommentsSection({
     if (!newComment.trim()) return;
 
     try {
-      const res = await api.post(
-        `/comment/${postId}`,
-        { content: newComment },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await api.post(`/comment/${postId}`, { content: newComment });
 
       setComments((prev) => [res.data, ...prev]);
       setNewComment("");
@@ -73,9 +64,7 @@ export default function CommentsSection({
 
   const handleDeleteComment = async (commentId: number) => {
     try {
-      await api.delete(`/comment/${commentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/comment/${commentId}`);
 
       setComments((prev) => prev.filter((c) => c.id !== commentId));
 
@@ -117,12 +106,25 @@ export default function CommentsSection({
               key={comment.id}
               className="flex items-start justify-between bg-gray-800 p-2 rounded"
             >
-              <div>
-                <p className="text-sm text-gray-200">{comment.content}</p>
-                <p className="text-xs text-gray-500">
-                  {comment.user?.name || "Nepoznat"} •{" "}
-                  {new Date(comment.createdAt).toLocaleString()}
-                </p>
+              <div className="flex items-start space-x-2">
+                {comment.user?.profileImage ? (
+                  <img
+                    src={`http://localhost:3000/${comment.user.profileImage.replace(/^\.?\//, "")}`}
+                    alt=""
+                    className="w-5 h-5 rounded-full object-cover mt-0.5"
+                  />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center text-xs mt-0.5">
+                    {comment.user?.name?.[0]?.toUpperCase() || "?"}
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-gray-200">{comment.content}</p>
+                  <p className="text-xs text-gray-500">
+                    {comment.user?.name || "Nepoznat"} •{" "}
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => handleDeleteComment(comment.id)}

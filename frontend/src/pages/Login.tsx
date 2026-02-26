@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -21,18 +22,16 @@ export default function Login() {
         password,
       });
 
-      const { accessToken, user } = res.data;
+      const { accessToken, refreshToken, user } = res.data;
 
-     
       login(user, accessToken);
-
-      console.log("Login uspešan ✅", res.data);
+      localStorage.setItem("refreshToken", refreshToken);
 
       
       navigate("/feed", { replace: true });
     } catch (err: any) {
-      console.error("Greška pri loginu ❌", err.response?.data || err.message);
-      alert("Neuspešan login! Proveri email/lozinku.");
+      console.error("Greška pri loginu", err.response?.data || err.message);
+      toast.error("Neuspešan login! Proveri email/lozinku.");
     } finally {
       setLoading(false);
     }

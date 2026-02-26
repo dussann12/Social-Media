@@ -16,6 +16,7 @@ export class PostService {
                     id: true,
                     name: true,
                     email: true,
+                    profileImage: true,
                 },
             },
             likes: true,
@@ -31,6 +32,7 @@ export class PostService {
                     select: {
                       id: true,
                       name: true,
+                      profileImage: true,
                 },
               },
               likes: true,
